@@ -15,12 +15,6 @@ Built around an STM32 microcontroller and a 2.4" ILI9341 TFT display, it provide
 - Designed with toolchanger 3D printers in mind  
 &nbsp;
 
-**Target Printer**  
-Klipper-Monitor is initially developed with the E3NG 3D printer in mind.  
-For this reason, the default firmware includes the E3NG logo and branding.  
-However, the project is not limited to E3NG. The firmware and interface can be adapted for any 3D printer that meets the hardware and software requirements.
-&nbsp;
-
 **Compatibility**  
 Currently, Klipper-Monitor works only with Klipper installations running on Raspberry Pi.  
   
