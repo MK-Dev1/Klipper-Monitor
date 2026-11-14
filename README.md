@@ -23,6 +23,8 @@ For this reason, the default firmware includes the E3NG logo.
 However, the project is not limited to E3NG. The firmware and interface can be adapted for any 3D printer that meets the hardware and software requirements.
 &nbsp;  
 
+&nbsp;  
+
 **Compatibility**  
 Currently, Klipper-Monitor works only with Klipper installations running on Raspberry Pi.  
   
