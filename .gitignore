@@ -1,0 +1,7 @@
+venv/
+
+.vscode/
+.pio/
+
+ch.py
+zero.py
