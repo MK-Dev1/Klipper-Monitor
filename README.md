@@ -26,6 +26,9 @@ and select your logo.
 On default there is no logo  
 &nbsp;  
 
+**Compatibility**  
+Klipper-Monitor is compatible with any raspberry pi based 3d printer running on klipper firmware  
+It supports heated and not heated beds and multiple [up to 5] nozzles [6 if bed is not heated]  
 &nbsp;  
 
 **Project Status**  
