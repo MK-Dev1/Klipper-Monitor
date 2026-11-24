@@ -9,6 +9,30 @@
 #define SPI_SPEED 60000000 // 60Mhz
 
 
+
+// Hardware
+#define NOZZLES 5          // Amount of nozzles
+#define HEATED_BED true    // Heated bed?
+
+
+
+// If only one nozzle should it
+// be treated as selected one or
+// normal? true - selected
+// [it only affects style of nozzle card]
+#define SONE true
+
+
+
+// Show temp graphs?
+// Works only for printers with max
+// 3 total heaters [nozzles + bed]
+#define GRAPHS true
+#define GRAPH_MAX 250
+#define BED_GRAPH_MAX 120
+
+
+
 // Backlight
 // if this is true then screen backlight
 // will turn off while waiting screen is

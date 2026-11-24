@@ -12,20 +12,17 @@ Adafruit_ILI9341 tft(TFT_CS, TFT_DC, TFT_RST);
 bool ON = HIGH;
 bool OFF = LOW;
 
-float nozzleCurrent[5] = {
-    214.5, 215.2, 213.8, 216.0, 214.1
+float nozzleCurrent[6] = {
+    214.5, 215.2, 213.8, 216.0, 214.1, 59.5
 };
 
-float nozzleTarget[5] = {
-    220, 220, 0, 220, 220
+float nozzleTarget[6] = {
+    220, 220, 0, 220, 220, 60
 };
 
 int power[6] = {
   100, 52, -1, 10, 60, 100
 };
-
-float bedCurrent = 59.5;
-float bedTarget = 60.0;
 
 const int selectedNozzle = 1;
 
@@ -43,10 +40,21 @@ void drawTemperatureCard(
   int h,
   uint16_t color,
   bool selected,
-  int power
+  int power,
+  int heaters
 ) {
-  uint16_t borderColor = selected ? S_NOZZLE : color;
-  int thickness = selected ? 3 : 1;
+  int thickness;
+  uint16_t borderColor;
+  if (NOZZLES > 1) {
+    thickness = selected ? 3 : 1;
+    borderColor = selected ? S_NOZZLE : color;
+  } else if (SONE) {
+    thickness = color == BED ? 1 : 3;
+    borderColor = color == BED ? BED : S_NOZZLE;
+  } else {
+    thickness = 1;
+    borderColor = color;
+  }
 
   for (int i = 0; i < thickness; i++) {
     tft.drawRoundRect(
@@ -83,21 +91,74 @@ void drawTemperatureCard(
 
   tft.setTextColor(T_TEMP);
   tft.print((int)target);
+
+  if (heaters <= 3 && GRAPHS) {
+    tft.setTextColor(0xFFFFFF);
+    tft.drawLine(x + 7, y + 60, x + 7, y + 110, 0xFFFFFF);
+    switch (heaters) {
+      case 1:
+        tft.drawLine(x + 7, y + 110, x + 300, y + 110, 0xFFFFFF);
+        break;
+      case 2:
+        tft.drawLine(x + 7, y + 110, x + 140, y + 110, 0xFFFFFF);
+        break;
+      case 3:
+        tft.drawLine(x + 7, y + 110, x + 90, y + 110, 0xFFFFFF);
+        break;
+    }
+    tft.setCursor(x + 12, y + 80);
+    tft.setTextSize(1);
+    tft.print("[GRAPH]");
+  }
 }
 
+void setPos(int n, int p[24]) {
+  if (n <= 3) {
+    int w = (320-(5*n))/n-(6-(2*n));
+    int h = 125;
+    for (int i = 0; i < n; i++) {
+      p[i*4] = i*w+5 + i*5;
+      p[i*4+1] = 5;
+      p[i*4+2] = w;
+      p[i*4+3] = h;
+    }
+  } else {
+    int w = 100;
+    int h = 60;
+    for (int i = 0; i < 3; i++) {
+      p[i*4] = i*w+5 + i*5;
+      p[i*4+1] = 5;
+      p[i*4+2] = w;
+      p[i*4+3] = h;
+    }
+    for (int i = 0; i < n-3; i++) {
+      p[(i+3)*4] = (320 - ((n-3)*w) - ((n-4)*5)) / 2 + i*(w+5) + 1;
+      p[(i+3)*4+1] = 72;
+      p[(i+3)*4+2] = w;
+      p[(i+3)*4+3] = h;
+    }
+  }
+}
 
-void drawDashboard() {
-
+int p[24];
+void drawDashboard(int heaters) {
   int w = 100;
   int h = 60;
+
 
   int x[3] = {5, 110, 215};
 
   int y[2] = {5, 72};
 
+  setPos(heaters, p);
 
-  for (int i = 0; i < 6; i++) {
-    if (i != 5) {
+  for (int i = 0; i < heaters; i++) {
+    if (HEATED_BED && i == heaters-1) {
+      drawTemperatureCard(
+        "BED", nozzleCurrent[i], nozzleTarget[i],
+        p[i*4], p[i*4+1], p[i*4+2], p[i*4+3], BED, false, power[i], heaters
+      );
+    } else {
       char name[4];
       snprintf(name, sizeof(name), "T%d", i);
 
@@ -105,17 +166,13 @@ void drawDashboard() {
         name,
         nozzleCurrent[i],
         nozzleTarget[i],
-        x[i % 3],
-        y[i < 3 ? 0 : 1],
-        w, h,
+        p[i*4],
+        p[i*4+1],
+        p[i*4+2], p[i*4+3],
         NOZZLE,
         selectedNozzle == i,
-        power[i]
-      );
-    } else {
-      drawTemperatureCard(
-        "BED", bedCurrent, bedTarget,
-        x[2], y[1], w, h, BED, false, power[5]
+        power[i],
+        heaters
       );
     }
   }
@@ -153,7 +210,7 @@ void drawDashboard() {
   );
   tft.setTextSize(1);
   tft.setCursor(250, 175);
-  tft.setTextColor(0x0000);
+  tft.setTextColor(0xFFFF);
   tft.print("[preview]");
 
   tft.setCursor(14, 213);
@@ -212,12 +269,17 @@ void clear() {
   }
 }
 
+
+int heaters;
+
 void setup() {
   pinMode(BACKLIT_PIN, OUTPUT);
   if (BACKLIT_REVERSE) {
     ON = LOW;
     OFF = HIGH;
   }
+
+  heaters = NOZZLES + (HEATED_BED ? 1 : 0);
 
   SPI.begin();
 
@@ -228,7 +290,7 @@ void setup() {
   waitScreen();
   percent = 0;
   tft.fillScreen(BG);
-  drawDashboard();
+  drawDashboard(heaters);
   digitalWrite(BACKLIT_PIN, ON);
 }
 
@@ -238,6 +300,6 @@ void loop() {
     percent = 0;
   }
   clear();
-  drawDashboard();
+  drawDashboard(heaters);
   delay(200);
 }
